@@ -1,7 +1,7 @@
 
-  # Sports Betting App Landing Page
+  # Sports Betting App
 
-  This is a code bundle for Sports Betting App Landing Page. The original project is available at https://www.figma.com/design/GPpIoO1ag0lEaRqLiUIVfo/Sports-Betting-App-Landing-Page.
+  This is Group 1 submission for 491
 
   ## Running the code
 
