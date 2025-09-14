@@ -20,10 +20,6 @@ export function AppDownload() {
               </div>
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-accent rounded-full mr-3"></div>
-                <span>Face ID and Touch ID login</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-accent rounded-full mr-3"></div>
                 <span>Exclusive mobile-only promotions</span>
               </div>
               <div className="flex items-center">
