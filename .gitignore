@@ -1,0 +1,59 @@
+# --- Node / Frontend ---
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite / React
+*.local
+.vite/
+.cache/
+coverage/
+
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+*.db
+*.sqlite3
+*.log
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Alembic migrations cache
+alembic/versions/*.pyc
+.alembic
+
+# --- General / OS ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Environment files ---
+.env
+*.env
+.env.*.local
+
+# --- Docker ---
+/docker-data/
