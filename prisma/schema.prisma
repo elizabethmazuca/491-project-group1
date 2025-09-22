@@ -124,6 +124,7 @@ model Game {
 
   bets Bet[]
 
+  @@unique([homeTeam, awayTeam, gameTime])
   @@map("games")
 }
 
