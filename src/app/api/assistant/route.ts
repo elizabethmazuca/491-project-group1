@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+// import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const askQuestionSchema = z.object({
@@ -20,13 +20,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const questions = await prisma.bettingAssistant.findMany({
-      where: { userId },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 20, // Limit to last 20 questions
-    })
+    // const questions = await prisma.bettingAssistant.findMany({
+    //   where: { userId },
+    //   orderBy: {
+    //     createdAt: 'desc',
+    //   },
+    //   take: 20, // Limit to last 20 questions
+    // })
+    const questions: any[] = [] // Return empty array
 
     return NextResponse.json(questions)
   } catch (error) {
@@ -48,13 +49,23 @@ export async function POST(request: NextRequest) {
     const response = generateBettingResponse(question)
 
     // Save the question and response
-    const assistantResponse = await prisma.bettingAssistant.create({
-      data: {
-        question,
-        response,
-        userId,
-      },
-    })
+    // const assistantResponse = await prisma.bettingAssistant.create({
+    //   data: {
+    //     question,
+    //     response,
+    //     userId,
+    //   },
+    // })
+
+    // Return a mocked response since we are not saving to DB
+    const assistantResponse = {
+      id: 'mock-id',
+      question,
+      response,
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
 
     return NextResponse.json(assistantResponse, { status: 201 })
   } catch (error) {
