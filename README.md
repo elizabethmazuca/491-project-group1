@@ -1,11 +1,20 @@
+# PayDay — Sports Betting Simulator (Monorepo)
 
-  # Sports Betting App
+This repo holds the **frontend (React + Vite + TS)** in `apps/web` and the **backend (FastAPI)** in `apps/api`.  
+Local DB is Postgres via Docker. Virtual currency only.
 
-  This is Group 1 submission for 491
+## Quick Start
+### DB
+docker compose -f docker/docker-compose.yml up -d
 
-  ## Running the code
+cd apps/api
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload --port 4000
 
-  Run `npm i` to install the dependencies.
-
-  Run `npm run dev` to start the development server.
-  
+### Frontend
+cd apps/web
+npm install
+cp .env.example .env
+npm run dev
