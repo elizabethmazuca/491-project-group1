@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 app = FastAPI(title="PayDay API", version="0.1.0")
 
+from app.api.routes import games as games_router
+app.include_router(games_router.router)
+
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 app.add_middleware(
     CORSMiddleware,
