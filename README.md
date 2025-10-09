@@ -19,6 +19,7 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
 
 - **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Prisma ORM
+- **AI Service**: Python 3 + FastAPI + Uvicorn (microservice at services/ai)
 - **Database**: PostgreSQL
 - **Authentication**: NextAuth.js
 - **Validation**: Zod
@@ -28,8 +29,10 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 18 or newer
+- Python 3.10 or newer
 - PostgreSQL database
+-(Optional) Docker for local database setup
 
 ### Installation
 
@@ -51,9 +54,10 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
    
    Update the `.env.local` file with your database credentials:
    ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/fullstack_nextjs_app"
+   DATABASE_URL="postgresql://username:password@localhost:5432/betz_app"
    NEXTAUTH_URL="http://localhost:3000"
-   NEXTAUTH_SECRET="your-secret-key-here"
+   NEXTAUTH_SECRET="your-secret-key"
+   NEXT_PUBLIC_AI_BASE="http://localhost:5055"   # Python AI service URL
    ```
 
 4. **Set up the database**
@@ -76,58 +80,72 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
 6. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+## Python AI Service (FastAPI)
+Located in services/ai. Provides basic betting recommendations used by the Next.js app.
+
+### Endpoints
+Route	  Method	Description
+/health	GET	Health check
+/score	POST	Returns AI recommendation JSON { pick, confidence, reasons }
+
+## Run Locally
+cd services/ai
+python -m venv .venv
+### Windows: .venv\Scripts\activate
+### macOS/Linux:
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload --host 0.0.0.0 --port 5055
+
+
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   ├── users/         # User management endpoints
-│   │   ├── posts/         # Post management endpoints
-│   │   └── auth/          # Authentication endpoints
-│   ├── dashboard/         # Dashboard page
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # Reusable components
-│   └── ui/               # UI components (Button, Card, etc.)
-├── lib/                  # Utility functions
-│   ├── db.ts            # Database connection
-│   └── utils.ts         # Helper functions
-└── types/               # TypeScript type definitions
+├── app/
+│   ├── api/
+│   │   ├── games/               # Game endpoints
+│   │   ├── bets/                # Betting endpoints
+│   │   ├── users/               # User management
+│   │   ├── friends/             # Social endpoints
+│   │   └── ai/                  # AI proxy (to FastAPI)
+│   ├── dashboard/
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   └── ui/
+├── lib/
+│   ├── db.ts
+│   └── utils.ts
+└── types/
 
 prisma/
-└── schema.prisma        # Database schema
+└── schema.prisma
+
+services/
+└── ai/
+    ├── app/main.py
+    ├── requirements.txt
+    └── .env.example
+
 ```
 
 ## API Endpoints
 
 ### Users
-- `GET /api/users` - Get all users
-- `POST /api/users` - Create a new user
+- GET /api/users – Get all users
+- POST /api/users – Create a new user
 
-### Posts & Comments
-- `GET /api/posts` - Get all posts
-- `POST /api/posts` - Create a new post
-- `GET /api/posts/[id]` - Get a specific post
-- `PUT /api/posts/[id]` - Update a specific post
-- `DELETE /api/posts/[id]` - Delete a specific post
-- `GET /api/comments` - Get comments for a post
-- `POST /api/comments` - Create a new comment
-
-### Sports Betting
-- `GET /api/games` - Get all games (with filters for status/league)
-- `POST /api/games` - Create a new game
-- `GET /api/bets` - Get user's bets
-- `POST /api/bets` - Place a new bet
-
-### Social Features
-- `GET /api/friends` - Get user's friends
-- `POST /api/friends` - Add a friend
+### Bets and Games
+- GET /api/games – List games
+- POST /api/bets – Place bet
+- GET /api/me/bets – View user bets
+- POST /api/admin/settle/[gameId] – Settle bets (dev use)
 
 ### AI Assistant
-- `GET /api/assistant` - Get user's previous questions
-- `POST /api/assistant` - Ask the betting assistant a question
+- POST /api/ai/recommendations – Proxy → Python /score
 
 ## Database Schema
 
