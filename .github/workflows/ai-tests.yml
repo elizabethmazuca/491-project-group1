@@ -1,0 +1,19 @@
+name: AI Service Tests
+on:
+  pull_request:
+    paths: ["services/ai/**"]
+  push:
+    paths: ["services/ai/**"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest --maxfail=1 --disable-warnings -q
