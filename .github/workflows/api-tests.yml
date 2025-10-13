@@ -1,36 +1,59 @@
 name: API Service Tests
+
 on:
   pull_request:
-    paths: ["services/api/**"]
+    paths:
+      - "services/api/**"
+      - ".github/workflows/api-tests.yml"
   push:
-    paths: ["services/api/**"]
+    paths:
+      - "services/api/**"
+      - ".github/workflows/api-tests.yml"
+
+concurrency:
+  group: api-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: pytest (API) — py${{ matrix.python-version }}
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: services/api
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.11"]   # add "3.10" later for extra CI Contribution points
+        python-version: ["3.10", "3.11"]
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: ${{ matrix.python-version }} }
-      - run: python -m pip install -U pip
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            services/api/requirements.txt
+            services/api/requirements-dev.txt
+
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-      - run: pytest --maxfail=1 --disable-warnings -q
-        env: { PYTHONPATH: . }
-      - name: Upload pytest results (artifact)
-        if: always()
+
+      - name: Run pytest (JUnit)
+        env:
+          PYTHONPATH: .
         run: |
-          mkdir -p .artifacts
-          echo "OK" > .artifacts/summary.txt
-        # prove a CI contribution by uploading any artifact
-      - uses: actions/upload-artifact@v4
+          pytest --maxfail=1 --disable-warnings -q --junitxml=pytest-report.xml
+
+      - name: Upload test report
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: api-pytest-artifacts
-          path: services/api/.artifacts
+          name: api-pytest-report-py${{ matrix.python-version }}
+          path: services/api/pytest-report.xml
