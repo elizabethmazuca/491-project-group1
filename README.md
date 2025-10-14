@@ -88,6 +88,10 @@ Route	  Method	Description
 /health	GET	Health check
 /score	POST	Returns AI recommendation JSON { pick, confidence, reasons }
 
+### Next.js AI Proxy
+The web app calls **`POST /api/ai/recommendations`**, which forwards to the Python AI service (`POST {AI_BASE}/score`).  
+Set `NEXT_PUBLIC_AI_BASE` in `.env.local` (defaults to `http://localhost:5055` for local dev).
+
 ## Run Locally
 cd services/ai
 python -m venv .venv
