@@ -39,7 +39,7 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd fullstack-nextjs-app
+   cd 491-project-group1
    ```
 
 2. **Install dependencies**
@@ -182,6 +182,18 @@ The application includes the following models:
 3. **Deploy** - Deploy to Vercel, Netlify, or your preferred platform
 4. **Add tests** - Implement unit and integration tests
 5. **Add monitoring** - Set up error tracking and analytics
+
+## Continuous Integration & Testing
+
+This project uses **GitHub Actions** to run automated tests on every push and pull request.
+
+- Workflow file: `.github/workflows/api-tests.yml`
+- Test framework: `pytest` (for the FastAPI service)
+- To run tests locally:
+  ```bash
+  cd services/api
+  pip install -r requirements-dev.txt
+  pytest
 
 ## Contributing
 
