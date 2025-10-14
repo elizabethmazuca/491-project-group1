@@ -1,32 +1,60 @@
 name: API Service Tests
+
 on:
   pull_request:
-    paths: ["services/api/**", ".github/workflows/api-tests.yml"]
+    paths:
+      - "services/api/**"
+      - ".github/workflows/api-tests.yml"
   push:
-    paths: ["services/api/**", ".github/workflows/api-tests.yml"]
-concurrency: { group: api-tests-${{ github.ref }}, cancel-in-progress: true }
+    paths:
+      - "services/api/**"
+      - ".github/workflows/api-tests.yml"
+
+concurrency:
+  group: api-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: pytest (API) — py${{ matrix.python-version }}
+    name: "pytest (API) — py${{ matrix.python-version }}"
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: services/api } }
-    strategy: { fail-fast: false, matrix: { python-version: ["3.10","3.11"] } }
+
+    defaults:
+      run:
+        working-directory: services/api
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: |
             services/api/requirements.txt
             services/api/requirements-dev.txt
-      - run: |
+
+      - name: Install dependencies
+        run: |
           python -m pip install -U pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
       - name: Run pytest (JUnit)
-        env: { PYTHONPATH: . }
+        env:
+          PYTHONPATH: .
         run: pytest --maxfail=1 --disable-warnings -q --junitxml=pytest-report.xml
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload test report
         if: always()
-        with: { name: api-pytest-report-py${{ matrix.python-version }}, path: services/api/pytest-report.xml }
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-pytest-report-py${{ matrix.python-version }}
+          path: pytest-report.xml
