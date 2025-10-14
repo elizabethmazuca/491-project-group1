@@ -1,19 +1,32 @@
 name: AI Service Tests
 on:
   pull_request:
-    paths: ["services/ai/**"]
+    paths: ["services/ai/**", ".github/workflows/ai-tests.yml"]
   push:
-    paths: ["services/ai/**"]
+    paths: ["services/ai/**", ".github/workflows/ai-tests.yml"]
+concurrency: { group: ai-tests-${{ github.ref }}, cancel-in-progress: true }
 jobs:
   test:
+    name: pytest (AI) — py${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/ai
+    defaults: { run: { working-directory: services/ai } }
+    strategy: { fail-fast: false, matrix: { python-version: ["3.10","3.11"] } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - run: pytest --maxfail=1 --disable-warnings -q
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            services/ai/requirements.txt
+            services/ai/requirements-dev.txt
+      - run: |
+          python -m pip install -U pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+      - name: Run pytest (JUnit)
+        env: { PYTHONPATH: . }
+        run: pytest --maxfail=1 --disable-warnings -q --junitxml=pytest-report.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: ai-pytest-report-py${{ matrix.python-version }}, path: services/ai/pytest-report.xml }
