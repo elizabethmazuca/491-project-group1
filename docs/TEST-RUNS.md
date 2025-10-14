@@ -28,4 +28,10 @@ Track executions across builds/dates/environments. Link PRs and test case IDs:
   - **Related Test IDs:** UCL-003  
   - **Evidence:** issue link, PR3 commit
 
-> When you run more tests, add a new table row with: date, PR/commit, env (Local/CI/Preview), IDs, Pass/Fail, notes (links/screenshots).
+> ##Tests Run:
+| 2025-10-12 | PR12 (AI tests) | CI | AI-001, AI-002 | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18407083781
+| 2025-10-12 | PR16 (API CI)   | CI | UCL-001..004   | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18443190063
+| 2025-10-12 | PR11 (Web)      | Preview | WEB-ASSIST-001 | Pass | Vercel preview: https://<vercel-link> |
+| 2025-10-11 | PR14 (feat(api) matches + odds) | Local | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18426777254
+| 2025-10-10 | PR12 test(ai): add pytest for /health and /score + CI workflow | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18407083781
+| 2025-10-10 | PR13 docker-compose + Operations.md | Local | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18407967701
