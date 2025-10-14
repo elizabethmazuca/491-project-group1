@@ -16,11 +16,13 @@ concurrency:
 
 jobs:
   test:
-    name: pytest (API) — py${{ matrix.python-version }}
+    name: "pytest (API) — py${{ matrix.python-version }}"
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: services/api
+
     strategy:
       fail-fast: false
       matrix:
@@ -39,7 +41,7 @@ jobs:
             services/api/requirements.txt
             services/api/requirements-dev.txt
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           python -m pip install -U pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -48,12 +50,11 @@ jobs:
       - name: Run pytest (JUnit)
         env:
           PYTHONPATH: .
-        run: |
-          pytest --maxfail=1 --disable-warnings -q --junitxml=pytest-report.xml
+        run: pytest --maxfail=1 --disable-warnings -q --junitxml=pytest-report.xml
 
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-pytest-report-py${{ matrix.python-version }}
-          path: services/api/pytest-report.xml
+          path: pytest-report.xml
