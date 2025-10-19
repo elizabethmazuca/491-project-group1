@@ -5,3 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function formatBalance(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+
