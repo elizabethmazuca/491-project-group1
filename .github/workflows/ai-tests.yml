@@ -1,5 +1,8 @@
+# manual-run enabled
+
 name: AI Service Tests
 on:
+  workflow_dispatch:
   pull_request:
     paths: ["services/ai/**", ".github/workflows/ai-tests.yml"]
   push:

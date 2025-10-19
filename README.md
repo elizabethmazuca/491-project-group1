@@ -191,6 +191,11 @@ The application includes the following models:
 4. Add tests if applicable
 5. Submit a pull request
 
+## Documentation
+- [Architecture Overview](docs/architecture.md)
+- [Test Plan](docs/TEST-PLAN.md)
+- [Operations Runbook](docs/OPERATIONS.md)
+
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
