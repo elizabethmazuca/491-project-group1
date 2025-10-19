@@ -14,3 +14,7 @@ def test_score_happy_path():
 def test_score_validation_error():
     r = client.post("/score", json={"home_win_pct": 0.5})
     assert r.status_code in (400, 422)
+
+def test_score_rejects_missing_field():
+    r = client.post("/score", json={"home_win_pct": 0.7})  # away_win_pct missing
+    assert r.status_code in (400, 422)
