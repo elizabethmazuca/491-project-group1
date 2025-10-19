@@ -18,6 +18,7 @@ def test_score_validation_error():
 def test_score_rejects_missing_field():
     r = client.post("/score", json={"home_win_pct": 0.7})  # away_win_pct missing
     assert r.status_code in (400, 422)
+feat/add-ai-endpoint-tests
 
 def test_score_rejects_non_json():
     r = client.post(
@@ -38,3 +39,5 @@ def test_score_boundary_values():
         assert "recommendation" in body and body["recommendation"] in {"home","away"}
         assert 0.0 <= body["confidence"] <= 1.0
 
+main
+S
