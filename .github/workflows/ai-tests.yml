@@ -1,3 +1,5 @@
+# manual-run enabled
+
 name: AI Service Tests
 on:
   workflow_dispatch:
