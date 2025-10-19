@@ -40,4 +40,3 @@ def test_score_boundary_values():
         assert 0.0 <= body["confidence"] <= 1.0
 
 main
-S
