@@ -38,5 +38,3 @@ def test_score_boundary_values():
         body = r.json()
         assert "recommendation" in body and body["recommendation"] in {"home","away"}
         assert 0.0 <= body["confidence"] <= 1.0
-
-main
