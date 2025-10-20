@@ -117,7 +117,7 @@ export default function SportsPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">Soccer Betting</h1>
           <p className="text-xl text-gray-300">
-            Place your bets on today's biggest soccer matches
+            Place your bets on today&apos;s biggest soccer matches
           </p>
         </div>
 
