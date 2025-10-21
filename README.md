@@ -39,7 +39,7 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd fullstack-nextjs-app
+   cd 491-project-group1
    ```
 
 2. **Install dependencies**
@@ -47,7 +47,21 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
    npm install
    ```
 
-3. **Set up environment variables**
+3. **Set up API service**
+   ```bash
+   cd services/api
+   python3 -m venv .venv
+   . .venv/bin/activate
+   pip install -U pip
+   pip install -r requirements.txt
+   
+   # Install dev dependencies if present
+   [ -f requirements-dev.txt ] && pip install -r requirements-dev.txt
+   pytest
+   deactivate
+   ```
+
+4. **Set up environment variables**
    ```bash
    cp env.example .env.local
    ```
@@ -60,7 +74,7 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
    NEXT_PUBLIC_AI_BASE="http://localhost:5055"   # Python AI service URL
    ```
 
-4. **Set up the database**
+5. **Set up the database**
    ```bash
    # Generate Prisma client
    npx prisma generate
@@ -72,12 +86,12 @@ A modern, full-featured sports betting application built with Next.js 14, TypeSc
    npx prisma studio
    ```
 
-5. **Run the development server**
+6. **Run the development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+7. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## Python AI Service (FastAPI)
@@ -91,6 +105,17 @@ Route	  Method	Description
 ### Next.js AI Proxy
 The web app calls **`POST /api/ai/recommendations`**, which forwards to the Python AI service (`POST {AI_BASE}/score`).  
 Set `NEXT_PUBLIC_AI_BASE` in `.env.local` (defaults to `http://localhost:5055` for local dev).
+
+### AI Service Setup
+```bash
+cd services/ai
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+pytest
+deactivate
+```
 
 ## Run Locally
 cd services/ai
@@ -182,6 +207,18 @@ The application includes the following models:
 3. **Deploy** - Deploy to Vercel, Netlify, or your preferred platform
 4. **Add tests** - Implement unit and integration tests
 5. **Add monitoring** - Set up error tracking and analytics
+
+## Continuous Integration & Testing
+
+This project uses **GitHub Actions** to run automated tests on every push and pull request.
+
+- Workflow file: `.github/workflows/api-tests.yml`
+- Test framework: `pytest` (for the FastAPI service)
+- To run tests locally:
+  ```bash
+  cd services/api
+  pip install -r requirements-dev.txt
+  pytest
 
 ## Contributing
 
