@@ -1,7 +1,11 @@
 from fastapi import FastAPI
-from routers import matches, odds
+from routers import matches, odds, wallet, bets
 
 app = FastAPI(title="Sports API (UCL)", version="0.1.0")
+app.include_router(matches.router)
+app.include_router(odds.router)
+app.include_router(wallet.router)
+app.include_router(bets.router)
 
 @app.get("/health")
 def health():
