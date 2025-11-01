@@ -35,3 +35,4 @@ Track executions across builds/dates/environments. Link PRs and test case IDs:
 | 2025-10-11 | PR14 (feat(api) matches + odds) | Local | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18426777254
 | 2025-10-10 | PR12 test(ai): add pytest for /health and /score + CI workflow | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18407083781
 | 2025-10-10 | PR13 docker-compose + Operations.md | Local | Pass | Actions run: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18407967701
+| 2025-11-01 | PR feat/api-wallet-bets | CI | UCL-001..003 | Pass | Actions: https://github.com/elizabethmazuca/491-project-group1/actions/runs/18996228355 |
