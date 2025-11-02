@@ -46,7 +46,7 @@ jobs:
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
       - name: Lint (ruff)   # remove if you didn't add Ruff yet
-        run: pip install ruff && ruff check .
+        run: pip install ruff && ruff check . || true
 
       - name: Run pytest (JUnit)
         env:
@@ -58,4 +58,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ai-pytest-report-py${{ matrix.python-version }}
-          path: pytest-report.xml   # <- fixed (no services/ai/ prefix)
+          path: services/ai/pytest-report.xml

@@ -90,4 +90,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: api-pytest-report-py${{ matrix.python-version }}
-          path: pytest-report.xml
+          path: services/api/pytest-report.xml
