@@ -34,3 +34,11 @@ def test_get_odds_for_ucl_match():
 def test_odds_rejects_non_ucl():
     r = client.get("/odds", params={"match_id": 101, "league": "prem"})
     assert r.status_code == 400
+
+def test_odds_missing_match_id_returns_422():
+    r = client.get("/odds", params={"league": "ucl"})
+    assert r.status_code == 422
+
+def test_odds_league_must_be_ucl_400():
+    r = client.get("/odds", params={"match_id": 101, "league": "prem"})
+    assert r.status_code == 400
