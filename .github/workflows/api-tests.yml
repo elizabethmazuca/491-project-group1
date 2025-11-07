@@ -18,11 +18,9 @@ jobs:
   test:
     name: "pytest (API) — py${{ matrix.python-version }}"
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: services/api
-
     strategy:
       fail-fast: false
       matrix:
@@ -44,34 +42,46 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -U pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install fastapi pydantic uvicorn; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; else pip install pytest httpx pytest-cov; fi
 
-      - name: Run pytest (JUnit)
-        env:
-          PYTHONPATH: .
-        run: pytest --maxfail=1 --disable-warnings -q --junitxml=pytest-report.xml
-
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-pytest-report-py${{ matrix.python-version }}
-          path: pytest-report.xml
+      - name: Show environment (debug)
+        run: |
+          python -V
+          pip -V
+          echo "PWD=$(pwd)"
+          ls -la
+          echo "---- tests ----"
+          ls -la tests || true
+          echo "---- routers ----"
+          ls -la routers || true
+          echo "---- pip freeze (first 50) ----"
+          pip freeze | head -n 50
 
       - name: Run pytest (JUnit + coverage)
-        env: { PYTHONPATH: . }
+        env:
+          PYTHONPATH: .
         run: |
+          set +e
           pytest --maxfail=1 --disable-warnings \
                  --junitxml=pytest-report.xml \
                  --cov=routers --cov-report=xml:coverage.xml
+          status=$?
+          # Ensure artifacts exist even on early failure
+          [ -f pytest-report.xml ] || echo '<testsuite name="api" tests="0" failures="1"><testcase classname="ci" name="pre_pytest_failure"><failure message="pytest failed before writing JUnit"/></testcase></testsuite>' > pytest-report.xml
+          [ -f coverage.xml ] || echo '<coverage></coverage>' > coverage.xml
+          # Copy to repo-root paths for upload
+          mkdir -p "$GITHUB_WORKSPACE/services/api"
+          cp -f pytest-report.xml "$GITHUB_WORKSPACE/services/api/pytest-report.xml"
+          cp -f coverage.xml      "$GITHUB_WORKSPACE/services/api/coverage.xml"
+          exit $status
 
-      - name: Upload test report
+      - name: Upload JUnit
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-pytest-report-py${{ matrix.python-version }}
-          path: services/api/pytest-report.xml    # repo-root path
+          path: services/api/pytest-report.xml
 
       - name: Upload coverage
         if: always()
