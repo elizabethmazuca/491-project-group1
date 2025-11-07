@@ -58,3 +58,24 @@ jobs:
         with:
           name: api-pytest-report-py${{ matrix.python-version }}
           path: pytest-report.xml
+
+      - name: Run pytest (JUnit + coverage)
+        env: { PYTHONPATH: . }
+        run: |
+          pytest --maxfail=1 --disable-warnings \
+                 --junitxml=pytest-report.xml \
+                 --cov=routers --cov-report=xml:coverage.xml
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-pytest-report-py${{ matrix.python-version }}
+          path: services/api/pytest-report.xml    # repo-root path
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage-py${{ matrix.python-version }}
+          path: services/api/coverage.xml
