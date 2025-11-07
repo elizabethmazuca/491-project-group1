@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Literal
+from .wallet import _get_balance, _add_balance
+
 
 # Use a router prefix so inner paths can be "" and "/{bet_id}/cancel"
 router = APIRouter(prefix="/bets", tags=["bets"])
