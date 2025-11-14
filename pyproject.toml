@@ -1,0 +1,7 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-select = ["I"]  # isort import ordering
+ignore = [
+  "E501",  # long lines handled by line-length
+]
