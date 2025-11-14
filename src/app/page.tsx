@@ -17,8 +17,8 @@ export default function Home() {
         
         <nav className="hidden md:flex items-center space-x-8">
           <Link href="/sports" className="text-white hover:text-orange-500 transition-colors">Sports</Link>
+          <Link href="/feed" className="text-white hover:text-orange-500 transition-colors">Feed</Link>
           <Link href="/live" className="text-white hover:text-orange-500 transition-colors">Live</Link>
-          <Link href="/casino" className="text-white hover:text-orange-500 transition-colors">Casino</Link>
           <Link href="/promotions" className="text-white hover:text-orange-500 transition-colors">Promotions</Link>
         </nav>
         
