@@ -27,6 +27,7 @@ export default function SportsPage() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [betAmount, setBetAmount] = useState('')
   const [betType, setBetType] = useState('home')
+  const [optedInGames, setOptedInGames] = useState<Record<string, boolean>>({})
 
   // Mock data matching the design - matches shown in the image
   const getMockGames = (): Game[] => {
@@ -131,6 +132,18 @@ export default function SportsPage() {
     fetchGames()
   }, [])
 
+  const handleOptIn = (gameId: string) => {
+    setOptedInGames((prev) => {
+      if (prev[gameId]) {
+        return prev
+      }
+      return {
+        ...prev,
+        [gameId]: true,
+      }
+    })
+  }
+
   const handlePlaceBet = async () => {
     if (!selectedGame || !betAmount) return
 
@@ -211,11 +224,11 @@ export default function SportsPage() {
           <Link href="/sports" className="text-orange-500 transition-colors">
             Sports
           </Link>
+          <Link href="/feed" className="text-white hover:text-orange-500 transition-colors">
+            Feed
+          </Link>
           <Link href="/live" className="text-white hover:text-orange-500 transition-colors">
             Live
-          </Link>
-          <Link href="/casino" className="text-white hover:text-orange-500 transition-colors">
-            Casino
           </Link>
           <Link href="/promotions" className="text-white hover:text-orange-500 transition-colors">
             Promotions
@@ -350,6 +363,13 @@ export default function SportsPage() {
                       Away {game.awayOdds.toFixed(2)}
                     </button>
                   </div>
+                  <Button
+                    onClick={() => handleOptIn(game.id)}
+                    className="mt-4 w-full bg-orange-500 hover:bg-orange-600 text-white"
+                    disabled={Boolean(optedInGames[game.id])}
+                  >
+                    {optedInGames[game.id] ? 'Opted In' : 'Opt In'}
+                  </Button>
               </CardContent>
             </Card>
             )
