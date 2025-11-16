@@ -1,21 +1,19 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Literal
-from .wallet import _get_balance, _add_balance
 
+from .wallet import _get_balance, _add_balance  # wallet helpers
 
-# Use a router prefix so inner paths can be "" and "/{bet_id}/cancel"
 router = APIRouter(prefix="/bets", tags=["bets"])
 
-# Simple in-memory store
 _BETS: dict[int, dict] = {}
 _NEXT_ID = 1
 
 class BetCreate(BaseModel):
     match_id: int
     selection: Literal["home", "away"]
-    stake: int
-    odds: float
+    stake: int = Field(ge=1)
+    odds: float = Field(ge=1.01)
 
 class Bet(BaseModel):
     id: int
@@ -27,9 +25,13 @@ class Bet(BaseModel):
 
 @router.post("", response_model=Bet)
 def create_bet(b: BetCreate):
-    # basic validation
-    if b.stake <= 0 or b.odds < 1.01:
-        raise HTTPException(status_code=422, detail="invalid bet")
+    # 422 validations are handled by Pydantic constraints above (stake>=1, odds>=1.01)
+    # Enforce insufficient funds (400) and reserve the stake
+    if b.stake > _get_balance():
+        raise HTTPException(status_code=400, detail="insufficient funds")
+
+    _add_balance(-b.stake)  # reserve on create
+
     global _NEXT_ID
     bet = {
         "id": _NEXT_ID,
@@ -54,5 +56,7 @@ def cancel_bet(bet_id: int):
         raise HTTPException(status_code=404, detail="bet not found")
     if bet["status"] != "open":
         raise HTTPException(status_code=400, detail="bet not open")
+
     bet["status"] = "cancelled"
+    _add_balance(+bet["stake"])  # refund reserved stake on cancel
     return bet  # type: ignore[return-value]
