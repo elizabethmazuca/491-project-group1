@@ -4,8 +4,10 @@ from typing import Literal
 
 from .wallet import _get_balance, _add_balance  # wallet helpers
 
+# Use a router prefix so inner paths can be "" and "/{bet_id}/cancel"
 router = APIRouter(prefix="/bets", tags=["bets"])
 
+# Simple in-memory store
 _BETS: dict[int, dict] = {}
 _NEXT_ID = 1
 
@@ -25,12 +27,12 @@ class Bet(BaseModel):
 
 @router.post("", response_model=Bet)
 def create_bet(b: BetCreate):
-    # Pydantic enforces stake>=1 and odds>=1.01 (422 otherwise)
-    # Enforce insufficient funds and reserve the stake
+    # Pydantic handles 422 for stake/odds via Field constraints.
+    # Enforce insufficient funds (400) and reserve the stake.
     if b.stake > _get_balance():
         raise HTTPException(status_code=400, detail="insufficient funds")
 
-    _add_balance(-b.stake)  # reserve stake on bet creation
+    _add_balance(-b.stake)  # reserve on create
 
     global _NEXT_ID
     bet = {
