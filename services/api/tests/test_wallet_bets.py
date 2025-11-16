@@ -42,3 +42,20 @@ def test_bet_double_cancel_rejected():
     client.post(f"/bets/{bet_id}/cancel")
     r2 = client.post(f"/bets/{bet_id}/cancel")
     assert r2.status_code == 400
+
+def test_bet_reserves_and_cancel_refunds():
+    r0 = client.get("/wallet/me"); bal0 = r0.json()["balance"]
+    r1 = client.post("/bets", json={"match_id": 101, "selection": "home", "stake": 40, "odds": 1.9})
+    assert r1.status_code == 200
+    r2 = client.get("/wallet/me"); bal1 = r2.json()["balance"]
+    assert bal1 == bal0 - 40
+    bet_id = r1.json()["id"]
+    r3 = client.post(f"/bets/{bet_id}/cancel")
+    assert r3.status_code == 200
+    r4 = client.get("/wallet/me"); bal2 = r4.json()["balance"]
+    assert bal2 == bal0  # refunded
+
+def test_bet_rejects_insufficient_funds():
+    r0 = client.get("/wallet/me"); bal0 = r0.json()["balance"]
+    r = client.post("/bets", json={"match_id": 101, "selection": "home", "stake": bal0 + 1, "odds": 1.9})
+    assert r.status_code == 400
