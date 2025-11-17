@@ -6,17 +6,23 @@ import {
   formatFileSize,
 } from '../image-upload-validation'
 
+// Simple File-like object for Node.js testing
+// Only implements the properties our validation function uses: size and type
+interface MockFile {
+  size: number
+  type: string
+  name?: string
+}
+
 describe('Image Upload Validation - Max File Size', () => {
   // Helper function to create test files
-  const createFile = (size: number, type: string = 'image/jpeg'): File => {
-    const blob = new Blob(['x'.repeat(size)], { type })
-    const file = new File([blob], 'test-image.jpg', { type })
-    // Override size property for testing
-    Object.defineProperty(file, 'size', {
-      value: size,
-      writable: false,
-    })
-    return file
+  // Returns a plain object that matches the File interface for our use case
+  const createFile = (size: number, type: string = 'image/jpeg'): MockFile => {
+    return {
+      size,
+      type,
+      name: 'test-image.jpg',
+    }
   }
 
   describe('validateImageFile', () => {
@@ -25,7 +31,7 @@ describe('Image Upload Validation - Max File Size', () => {
       const largeFile = createFile(6 * 1024 * 1024)
 
       // Test validation function
-      const result = validateImageFile(largeFile)
+      const result = validateImageFile(largeFile as File)
       
       expect(result.valid).toBe(false)
       expect(result.error).toBeDefined()
@@ -63,7 +69,7 @@ describe('Image Upload Validation - Max File Size', () => {
 
     it('should show error message when file exceeds max size', () => {
       const largeFile = createFile(10 * 1024 * 1024) // 10MB
-      const result = validateImageFile(largeFile)
+      const result = validateImageFile(largeFile as File)
 
       expect(result.valid).toBe(false)
       expect(result.error).toBeDefined()

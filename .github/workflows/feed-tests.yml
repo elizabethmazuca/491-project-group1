@@ -49,10 +49,11 @@ jobs:
           echo "Checking for test files..."
           find . -name "*.test.ts" -o -name "*.test.tsx" | head -10 || echo "No test files found"
           ls -la src/lib/__tests__/ || echo "Test directory not found"
+          echo "Node version:"
+          node --version
+          echo "NPM version:"
+          npm --version
 
       - name: Run Feed image upload validation tests
-        run: npm run test:run -- src/lib/__tests__/image-upload-validation.test.ts
-
-      - name: Run all image upload related tests
-        continue-on-error: true
-        run: npm run test:run -- --reporter=verbose || echo "Some tests may have failed"
+        run: |
+          npm run test:run -- src/lib/__tests__/image-upload-validation.test.ts --reporter=verbose
