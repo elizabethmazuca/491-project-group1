@@ -1,2 +1,3 @@
-import '@testing-library/jest-dom'
+// Vitest setup file for global test configuration
+// No additional setup needed for unit tests
 
