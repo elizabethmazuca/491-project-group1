@@ -5,6 +5,7 @@ on:
     paths:
       - "src/lib/image-upload-validation.ts"
       - "src/lib/__tests__/**"
+      - "src/app/api/upload/**"
       - "src/app/feed/**"
       - ".github/workflows/feed-tests.yml"
       - "vitest.config.ts"
@@ -13,6 +14,7 @@ on:
     paths:
       - "src/lib/image-upload-validation.ts"
       - "src/lib/__tests__/**"
+      - "src/app/api/upload/**"
       - "src/app/feed/**"
       - ".github/workflows/feed-tests.yml"
       - "vitest.config.ts"
@@ -54,6 +56,59 @@ jobs:
           echo "NPM version:"
           npm --version
 
-      - name: Run Feed image upload validation tests
+      - name: Run unit tests for image upload validation
         run: |
           npm run test:run -- src/lib/__tests__/image-upload-validation.test.ts --reporter=verbose
+
+      - name: Run API route tests for image upload validation
+        run: |
+          npm run test:run -- src/app/api/upload/validate/__tests__/route.test.ts --reporter=verbose
+
+      - name: Build Next.js application
+        run: npm run build
+
+      - name: Start Next.js server in background
+        run: |
+          npm start &
+          sleep 15
+          # Wait for server to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:3000/api/health || [ $? -eq 22 ]; do sleep 2; done' || true
+
+      - name: Test API endpoint with curl (Happy Path)
+        run: |
+          echo "Testing GET /api/upload/validate (constraints endpoint)..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:3000/api/upload/validate)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "FAILED: Expected 200, got $HTTP_CODE"
+            echo "Response: $BODY"
+            exit 1
+          fi
+          
+          echo "$BODY" | grep -q "maxSize" || (echo "Response missing maxSize" && exit 1)
+          echo "$BODY" | grep -q "acceptedTypes" || (echo "Response missing acceptedTypes" && exit 1)
+          echo "✓ GET /api/upload/validate passed"
+
+      - name: Test API endpoint with curl (Failure Path - No File)
+        run: |
+          echo "Testing POST /api/upload/validate without file..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3000/api/upload/validate \
+            -H "Content-Type: multipart/form-data")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          if [ "$HTTP_CODE" != "400" ]; then
+            echo "FAILED: Expected 400 for missing file, got $HTTP_CODE"
+            echo "Response: $BODY"
+            exit 1
+          fi
+          
+          echo "$BODY" | grep -q "No file provided" || (echo "Response missing error message" && exit 1)
+          echo "✓ POST /api/upload/validate (no file) correctly returns 400"
+
+      - name: Stop server
+        if: always()
+        run: |
+          pkill -f "next start" || true
