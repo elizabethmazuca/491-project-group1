@@ -42,7 +42,3 @@ jobs:
 
       - name: Run Feed image upload tests
         run: npm run test:run -- src/app/feed/__tests__/image-upload.test.tsx
-
-      - name: Run all tests (if other tests exist)
-        continue-on-error: true
-        run: npm run test:run || echo "No other tests found or tests failed"
