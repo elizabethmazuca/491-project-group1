@@ -3,7 +3,9 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const createPostSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().trim().min(1, {
+    message: "Title cannot be blank or only whitespace",
+  }),
   content: z.string().optional(),
   published: z.boolean().default(false),
   authorId: z.string(),
