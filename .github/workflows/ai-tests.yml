@@ -42,16 +42,27 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -U pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install fastapi pydantic uvicorn; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; else pip install pytest httpx pytest-cov; fi
 
-      - name: Lint (ruff)   # remove if you didn't add Ruff yet
+      - name: Lint (ruff) 
         run: pip install ruff && ruff check . || true
 
       - name: Run pytest (JUnit)
         env:
           PYTHONPATH: .
-        run: pytest --maxfail=1 --disable-warnings -q --junitxml=pytest-report.xml
+        run: |
+          set +e
+          pytest --maxfail=1 --disable-warnings \
+                 --junitxml=pytest-report.xml \
+                 --cov=. --cov-report=xml:coverage.xml
+          status=$?
+          [ -f pytest-report.xml ] || echo '<testsuite name="ai" tests="0" failures="1"><testcase classname="ci" name="pre_pytest_failure"><failure message="pytest failed before writing JUnit"/></testcase></testsuite>' > pytest-report.xml
+          [ -f coverage.xml ] || echo '<coverage></coverage>' > coverage.xml
+          mkdir -p "$GITHUB_WORKSPACE/services/ai"
+          cp -f pytest-report.xml "$GITHUB_WORKSPACE/services/ai/pytest-report.xml"
+          cp -f coverage.xml      "$GITHUB_WORKSPACE/services/ai/coverage.xml"
+          exit $status
 
       - name: Upload test report
         if: always()
@@ -59,3 +70,10 @@ jobs:
         with:
           name: ai-pytest-report-py${{ matrix.python-version }}
           path: services/ai/pytest-report.xml
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-coverage-py${{ matrix.python-version }}
+          path: services/ai/coverage.xml
