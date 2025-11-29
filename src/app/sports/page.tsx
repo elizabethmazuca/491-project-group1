@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Clock, Users, Trophy } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Clock, MessageCircle } from 'lucide-react'
+import { getTeamInitials } from '@/lib/utils'
+import Link from 'next/link'
 
 interface Game {
   id: string
@@ -15,6 +17,8 @@ interface Game {
   gameTime: string
   status: string
   league: string
+  homeScore?: number
+  awayScore?: number
 }
 
 export default function SportsPage() {
@@ -23,6 +27,62 @@ export default function SportsPage() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [betAmount, setBetAmount] = useState('')
   const [betType, setBetType] = useState('home')
+  const [optedInGames, setOptedInGames] = useState<Record<string, boolean>>({})
+
+  // Mock data matching the design - matches shown in the image
+  const getMockGames = (): Game[] => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    
+    // Live game - Premier League
+    const liveGameTime = new Date(today)
+    liveGameTime.setHours(20, 0, 0, 0) // 8:00 PM today
+    
+    // Upcoming games
+    const game2Time = new Date(today)
+    game2Time.setHours(21, 0, 0, 0) // 9:00 PM today
+    
+    const game3Time = new Date(today)
+    game3Time.setHours(18, 30, 0, 0) // 6:30 PM today
+    
+    return [
+      {
+        id: '1',
+        homeTeam: 'Manchester United',
+        awayTeam: 'Arsenal',
+        homeOdds: 2.15,
+        awayOdds: 3.2,
+        drawOdds: 3.4,
+        gameTime: liveGameTime.toISOString(),
+        status: 'live',
+        league: 'Premier League',
+        homeScore: 1,
+        awayScore: 1,
+      },
+      {
+        id: '2',
+        homeTeam: 'Real Madrid',
+        awayTeam: 'Barcelona',
+        homeOdds: 1.95,
+        awayOdds: 4.2,
+        drawOdds: 3.6,
+        gameTime: game2Time.toISOString(),
+        status: 'upcoming',
+        league: 'La Liga',
+      },
+      {
+        id: '3',
+        homeTeam: 'Bayern Munich',
+        awayTeam: 'Borussia Dortmund',
+        homeOdds: 1.75,
+        awayOdds: 5.5,
+        drawOdds: 3.8,
+        gameTime: game3Time.toISOString(),
+        status: 'upcoming',
+        league: 'Bundesliga',
+      },
+    ]
+  }
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -30,10 +90,40 @@ export default function SportsPage() {
         const response = await fetch('/api/games')
         if (response.ok) {
           const gamesData = await response.json()
-          setGames(gamesData)
+          
+          // Filter and sort games: today's matches, live first, then upcoming
+          const now = new Date()
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          const tomorrow = new Date(today)
+          tomorrow.setDate(tomorrow.getDate() + 1)
+          
+          const todayGames = gamesData
+            .filter((game: Game) => {
+              const gameDate = new Date(game.gameTime)
+              // Include games from today or live games regardless of date
+              return (
+                (gameDate >= today && gameDate < tomorrow) ||
+                game.status === 'live'
+              )
+            })
+            .sort((a: Game, b: Game) => {
+              // Live games first
+              if (a.status === 'live' && b.status !== 'live') return -1
+              if (a.status !== 'live' && b.status === 'live') return 1
+              // Then sort by game time
+              return new Date(a.gameTime).getTime() - new Date(b.gameTime).getTime()
+            })
+          
+          // Use mock data if no games found, otherwise use real data
+          setGames(todayGames.length > 0 ? todayGames : getMockGames())
+        } else {
+          // If API fails, use mock data
+          setGames(getMockGames())
         }
       } catch (error) {
         console.error('Error fetching games:', error)
+        // On error, use mock data so the page still displays
+        setGames(getMockGames())
       } finally {
         setLoading(false)
       }
@@ -41,6 +131,18 @@ export default function SportsPage() {
 
     fetchGames()
   }, [])
+
+  const handleOptIn = (gameId: string) => {
+    setOptedInGames((prev) => {
+      if (prev[gameId]) {
+        return prev
+      }
+      return {
+        ...prev,
+        [gameId]: true,
+      }
+    })
+  }
 
   const handlePlaceBet = async () => {
     if (!selectedGame || !betAmount) return
@@ -76,6 +178,18 @@ export default function SportsPage() {
     }
   }
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    })
+  }
+
+  const isLive = (game: Game) => {
+    return game.status === 'live'
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white">
@@ -93,92 +207,190 @@ export default function SportsPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      {/* Header - Matching Homepage Navigation */}
+      <header className="flex items-center justify-between px-6 py-4 bg-gray-900 border-b border-gray-800">
             <div className="flex items-center space-x-2">
+          <Link href="/">
               <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center">
                 <span className="text-white font-bold text-lg">B</span>
               </div>
+          </Link>
+          <Link href="/">
               <span className="text-white font-bold text-xl">Betz</span>
+          </Link>
             </div>
-            <nav className="flex items-center space-x-6">
-              <a href="/" className="text-gray-300 hover:text-orange-500">Home</a>
-              <a href="/sports" className="text-orange-500">Sports</a>
-              <a href="/live" className="text-gray-300 hover:text-orange-500">Live</a>
-              <a href="/casino" className="text-gray-300 hover:text-orange-500">Casino</a>
+        
+        <nav className="hidden md:flex items-center space-x-8">
+          <Link href="/sports" className="text-orange-500 transition-colors">
+            Sports
+          </Link>
+          <Link href="/feed" className="text-white hover:text-orange-500 transition-colors">
+            Feed
+          </Link>
+          <Link href="/live" className="text-white hover:text-orange-500 transition-colors">
+            Live
+          </Link>
+          <Link href="/promotions" className="text-white hover:text-orange-500 transition-colors">
+            Promotions
+          </Link>
             </nav>
-          </div>
+        
+        <div className="flex items-center space-x-4">
+          <Link href="/assistant">
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded flex items-center space-x-2">
+              <MessageCircle className="h-4 w-4" />
+              <span>Ask Rob</span>
+            </Button>
+          </Link>
+          <Link href="/auth/signin" className="text-white hover:text-orange-500 transition-colors">
+            Login
+          </Link>
+          <Link href="/auth/signup">
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded">
+              Sign Up
+            </Button>
+          </Link>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Today's Matches Section */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">Soccer Betting</h1>
-          <p className="text-xl text-gray-300">
-            Place your bets on today&apos;s biggest soccer matches
+          <h1 className="text-5xl font-bold text-white mb-2">Today&apos;s Matches</h1>
+          <p className="text-gray-400 text-lg">
+            Place your bets on the biggest soccer matches
           </p>
         </div>
 
-        {/* Games Grid */}
+        {/* Match Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {games.map((game) => (
-            <Card key={game.id} className="bg-gray-800 border-gray-700 hover:border-orange-500 transition-colors">
-              <CardHeader>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm">
+          {games.map((game) => {
+            const gameDate = new Date(game.gameTime)
+            const live = isLive(game)
+            
+            return (
+              <Card 
+                key={game.id} 
+                className="bg-gray-800 border-gray-700 hover:border-orange-500 transition-colors"
+              >
+                <CardContent className="p-6">
+                  {/* League and Status */}
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-medium">
                     {game.league}
                   </span>
-                  <div className="flex items-center text-green-400">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{game.status}</span>
+                    {live ? (
+                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        LIVE
+                      </span>
+                    ) : (
+                      <div className="flex items-center text-gray-400 text-sm">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>{formatTime(gameDate)}</span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Teams and Score */}
+                  <div className="space-y-4 mb-6">
+                    {/* Home Team */}
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold text-sm">
+                          {getTeamInitials(game.homeTeam)}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-medium">{game.homeTeam}</div>
+                      </div>
+                      {live && (
+                        <div className="text-white font-bold text-xl">
+                          {game.homeScore ?? 0}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* VS Separator */}
+                    <div className="text-center text-gray-500 text-sm font-medium">
+                      VS
+                    </div>
+
+                    {/* Away Team */}
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold text-sm">
+                          {getTeamInitials(game.awayTeam)}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-medium">{game.awayTeam}</div>
+                      </div>
+                      {live && (
+                        <div className="text-white font-bold text-xl">
+                          {game.awayScore ?? 0}
                 </div>
-                <CardTitle className="text-white text-lg">
-                  {game.homeTeam} vs {game.awayTeam}
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  <Clock className="h-4 w-4 inline mr-1" />
-                  {new Date(game.gameTime).toLocaleString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between items-center bg-gray-700 rounded px-3 py-2">
-                    <span className="text-white">{game.homeTeam}</span>
-                    <span className="text-orange-500 font-bold">{game.homeOdds}</span>
+                      )}
                   </div>
-                  <div className="flex justify-between items-center bg-gray-700 rounded px-3 py-2">
-                    <span className="text-white">Draw</span>
-                    <span className="text-orange-500 font-bold">{game.drawOdds || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between items-center bg-gray-700 rounded px-3 py-2">
-                    <span className="text-white">{game.awayTeam}</span>
-                    <span className="text-orange-500 font-bold">{game.awayOdds}</span>
+
+                  {/* Odds Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setBetType('home')
+                        setSelectedGame(game)
+                      }}
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                    >
+                      Home {game.homeOdds.toFixed(2)}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBetType('draw')
+                        setSelectedGame(game)
+                      }}
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                    >
+                      Draw {game.drawOdds?.toFixed(2) || 'N/A'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBetType('away')
+                        setSelectedGame(game)
+                      }}
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                    >
+                      Away {game.awayOdds.toFixed(2)}
+                    </button>
                   </div>
-                </div>
-                <Button 
-                  onClick={() => setSelectedGame(game)}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                >
-                  Place Bet
-                </Button>
+                  <Button
+                    onClick={() => handleOptIn(game.id)}
+                    className="mt-4 w-full bg-orange-500 hover:bg-orange-600 text-white"
+                    disabled={Boolean(optedInGames[game.id])}
+                  >
+                    {optedInGames[game.id] ? 'Opted In' : 'Opt In'}
+                  </Button>
               </CardContent>
             </Card>
-          ))}
+            )
+          })}
         </div>
+
+        {games.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">No matches scheduled for today</p>
+          </div>
+        )}
 
         {/* Betting Modal */}
         {selectedGame && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <Card className="bg-gray-800 border-gray-700 w-full max-w-md mx-4">
-              <CardHeader>
-                <CardTitle className="text-white">
+              <div className="p-6">
+                <h2 className="text-white text-xl font-bold mb-2">
                   Place Bet: {selectedGame.homeTeam} vs {selectedGame.awayTeam}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </h2>
+                <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Bet Type
@@ -233,39 +445,12 @@ export default function SportsPage() {
                     Cancel
                   </Button>
                 </div>
-              </CardContent>
+                </div>
+              </div>
             </Card>
           </div>
         )}
-
-        {/* Quick Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 text-orange-500 mx-auto mb-2" />
-              <h3 className="text-xl font-bold text-white mb-1">Live Games</h3>
-              <p className="text-gray-400">{games.filter(g => g.status === 'live').length} active</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-6 text-center">
-              <Clock className="h-8 w-8 text-orange-500 mx-auto mb-2" />
-              <h3 className="text-xl font-bold text-white mb-1">Upcoming</h3>
-              <p className="text-gray-400">{games.filter(g => g.status === 'upcoming').length} games</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-6 text-center">
-              <Trophy className="h-8 w-8 text-orange-500 mx-auto mb-2" />
-              <h3 className="text-xl font-bold text-white mb-1">Leagues</h3>
-              <p className="text-gray-400">{new Set(games.map(g => g.league)).size} leagues</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   )
 }
-

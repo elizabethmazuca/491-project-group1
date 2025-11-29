@@ -45,21 +45,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install fastapi pydantic uvicorn; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; else pip install pytest httpx pytest-cov; fi
 
-      - name: (optional) Ruff lint (non-blocking)
+      - name: Lint (ruff) 
         run: pip install ruff && ruff check . || true
 
-      - name: Show environment (debug)
-        run: |
-          python -V
-          pip -V
-          echo "PWD=$(pwd)"
-          ls -la
-          echo "---- tests ----"
-          ls -la tests || true
-          echo "---- pip freeze (first 50) ----"
-          pip freeze | head -n 50
-
-      - name: Run pytest (JUnit + coverage)
+      - name: Run pytest (JUnit)
         env:
           PYTHONPATH: .
         run: |
@@ -75,7 +64,7 @@ jobs:
           cp -f coverage.xml      "$GITHUB_WORKSPACE/services/ai/coverage.xml"
           exit $status
 
-      - name: Upload JUnit
+      - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
         with:

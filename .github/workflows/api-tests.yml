@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10","3.11"]
 
     steps:
       - name: Checkout
@@ -45,19 +45,6 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install fastapi pydantic uvicorn; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; else pip install pytest httpx pytest-cov; fi
 
-      - name: Show environment (debug)
-        run: |
-          python -V
-          pip -V
-          echo "PWD=$(pwd)"
-          ls -la
-          echo "---- tests ----"
-          ls -la tests || true
-          echo "---- routers ----"
-          ls -la routers || true
-          echo "---- pip freeze (first 50) ----"
-          pip freeze | head -n 50
-
       - name: Run pytest (JUnit + coverage)
         env:
           PYTHONPATH: .
@@ -65,12 +52,10 @@ jobs:
           set +e
           pytest --maxfail=1 --disable-warnings \
                  --junitxml=pytest-report.xml \
-                 --cov=routers --cov-report=xml:coverage.xml
+                 --cov=routers --cov-report=xml:coverage.xml -ra
           status=$?
-          # Ensure artifacts exist even on early failure
           [ -f pytest-report.xml ] || echo '<testsuite name="api" tests="0" failures="1"><testcase classname="ci" name="pre_pytest_failure"><failure message="pytest failed before writing JUnit"/></testcase></testsuite>' > pytest-report.xml
           [ -f coverage.xml ] || echo '<coverage></coverage>' > coverage.xml
-          # Copy to repo-root paths for upload
           mkdir -p "$GITHUB_WORKSPACE/services/api"
           cp -f pytest-report.xml "$GITHUB_WORKSPACE/services/api/pytest-report.xml"
           cp -f coverage.xml      "$GITHUB_WORKSPACE/services/api/coverage.xml"
