@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10","3.11"]
 
     steps:
       - name: Checkout
@@ -48,7 +48,7 @@ jobs:
       - name: Lint (ruff) 
         run: pip install ruff && ruff check . || true
 
-      - name: Run pytest (JUnit)
+      - name: Run pytest (JUnit + coverage)
         env:
           PYTHONPATH: .
         run: |
@@ -64,7 +64,7 @@ jobs:
           cp -f coverage.xml      "$GITHUB_WORKSPACE/services/ai/coverage.xml"
           exit $status
 
-      - name: Upload test report
+      - name: Upload JUnit
         if: always()
         uses: actions/upload-artifact@v4
         with:
