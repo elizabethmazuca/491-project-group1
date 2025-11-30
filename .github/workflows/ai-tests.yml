@@ -45,7 +45,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install fastapi pydantic uvicorn; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; else pip install pytest httpx pytest-cov; fi
 
-      - name: (optional) Ruff lint (non-blocking)
+      - name: Lint (ruff) 
         run: pip install ruff && ruff check . || true
 
       - name: Run pytest (JUnit + coverage)
@@ -55,7 +55,7 @@ jobs:
           set +e
           pytest --maxfail=1 --disable-warnings \
                  --junitxml=pytest-report.xml \
-                 --cov=. --cov-report=xml:coverage.xml -ra
+                 --cov=. --cov-report=xml:coverage.xml
           status=$?
           [ -f pytest-report.xml ] || echo '<testsuite name="ai" tests="0" failures="1"><testcase classname="ci" name="pre_pytest_failure"><failure message="pytest failed before writing JUnit"/></testcase></testsuite>' > pytest-report.xml
           [ -f coverage.xml ] || echo '<coverage></coverage>' > coverage.xml
