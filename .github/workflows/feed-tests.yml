@@ -1,0 +1,118 @@
+name: Feed Post Validation Tests
+
+on:
+  pull_request:
+    paths:
+      - "src/app/api/posts/**"
+      - ".github/workflows/feed-tests.yml"
+  push:
+    paths:
+      - "src/app/api/posts/**"
+      - ".github/workflows/feed-tests.yml"
+
+concurrency:
+  group: feed-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: "Feed Post Validation — Prevent Blank Posts"
+    runs-on: ubuntu-latest
+    
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Prisma
+        run: |
+          npx prisma generate
+          # Create a test database or use in-memory if needed
+          # For now, we'll test the validation without a real DB
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start Next.js server in background
+        run: |
+          npm start &
+          sleep 10
+          # Wait for server to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:3000/api/health || [ $? -eq 22 ]; do sleep 2; done' || true
+
+      - name: Test blank post rejection
+        run: |
+          # Test 1: Empty title should be rejected
+          echo "Test 1: Empty title"
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3000/api/posts \
+            -H "Content-Type: application/json" \
+            -d '{"title":"","authorId":"test-user-123","published":false}' || echo "500")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" != "400" ]; then
+            echo "FAILED: Expected 400 for empty title, got $HTTP_CODE"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+          echo "✓ Empty title correctly rejected"
+
+          # Test 2: Whitespace-only title should be rejected
+          echo "Test 2: Whitespace-only title"
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3000/api/posts \
+            -H "Content-Type: application/json" \
+            -d '{"title":"   ","authorId":"test-user-123","published":false}' || echo "500")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" != "400" ]; then
+            echo "FAILED: Expected 400 for whitespace-only title, got $HTTP_CODE"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+          echo "✓ Whitespace-only title correctly rejected"
+
+          # Test 3: Tab and newline only title should be rejected
+          echo "Test 3: Tab and newline only title"
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3000/api/posts \
+            -H "Content-Type: application/json" \
+            -d '{"title":"\t\n\r","authorId":"test-user-123","published":false}' || echo "500")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" != "400" ]; then
+            echo "FAILED: Expected 400 for tab/newline-only title, got $HTTP_CODE"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+          echo "✓ Tab/newline-only title correctly rejected"
+
+          # Test 4: Valid title with content should be accepted (if author exists)
+          # Note: This may fail if test user doesn't exist, but validation should pass
+          echo "Test 4: Valid non-blank title (validation passes)"
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3000/api/posts \
+            -H "Content-Type: application/json" \
+            -d '{"title":"Valid Post Title","authorId":"test-user-123","published":false}' || echo "500")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          # Should either be 201 (created) or 404 (author not found), but NOT 400 (validation error)
+          if [ "$HTTP_CODE" = "400" ]; then
+            echo "FAILED: Got 400 (validation error) for valid title, expected 201 or 404"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+          echo "✓ Valid title passed validation (HTTP $HTTP_CODE)"
+
+          echo ""
+          echo "✅ All blank post prevention tests passed!"
+
+      - name: Stop server
+        if: always()
+        run: |
+          pkill -f "next start" || true
+
