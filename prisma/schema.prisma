@@ -31,6 +31,8 @@ model User {
   accounts Account[]
   sessions Session[]
 
+  transactions Transaction[]
+
   @@map("users")
 }
 
@@ -154,4 +156,17 @@ model BettingAssistant {
   createdAt DateTime @default(now())
 
   @@map("betting_assistant")
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float
+  reason    String
+  refId     String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
 }
