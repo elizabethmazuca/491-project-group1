@@ -131,6 +131,16 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      // ✅ Record wallet transaction (ledger entry)
+      await tx.transaction.create({
+        data: {
+        userId,
+        amount: -amount,          // debit: stake goes out
+        reason: 'bet_stake',
+        refId: bet.id,
+        },
+      })
+
       return bet
     })
 
