@@ -30,6 +30,7 @@ model User {
   friendsAsFriend Friend[] @relation("FriendOf")
   accounts Account[]
   sessions Session[]
+  transactions Transaction[]
 
   @@map("users")
 }
@@ -144,6 +145,19 @@ model Bet {
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@map("bets")
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float    // + credit, - debit (matches User.balance Float)
+  reason    String   // "bet_stake", "bet_win", "admin_adjust", etc.
+  refId     String?  // e.g., Bet.id or Game.id for traceability
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
 }
 
 model BettingAssistant {
