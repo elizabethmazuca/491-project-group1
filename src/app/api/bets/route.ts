@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
+
+
 const createBetSchema = z.object({
   amount: z.number().positive(),
   odds: z.number().positive(),
@@ -98,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create bet and update user balance in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create the bet
       const bet = await tx.bet.create({
         data: {
