@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Transform the data to return the friend user object
-    const transformedFriends = friends.map((friendship) => ({
+    const transformedFriends = friends.map((friendship: any) => ({
       id: friendship.id,
       status: friendship.status,
       createdAt: friendship.createdAt,
